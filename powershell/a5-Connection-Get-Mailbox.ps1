@@ -1,4 +1,4 @@
-# a5-Get-Mailbox-Cert.ps1
+# a5-Connection-Get-Mailbox.ps1
 # Azure Automation Account script that uses an existing connection and connect to Exchange Online v2 API to get mailboxes.
 # Requires ExchangeOnlineManagement module
 
