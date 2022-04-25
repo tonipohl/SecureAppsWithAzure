@@ -47,4 +47,3 @@ short url for:
 https://login.microsoftonline.com/common/oauth2/authorize?client_id=f6108159-1168-475d-b3ca-be8104781bf8&response_type=code&resource=https://management.azure.com/&redirect_uri=https://governancetoolkit365backend-registration-dev.azurewebsites.net/&response_mode=query&scope=openid&state=powerbi
   
 to be continued...  
-
