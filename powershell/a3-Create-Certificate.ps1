@@ -10,7 +10,7 @@ $cert = New-SelfSignedCertificate `
     -NotAfter $(Get-Date).AddYears($certYears) `
     -Type SSLServerAuthentication `
     -FriendlyName 'MyAuthCert' `
-    -Subject 'CN=MyM365conf' `
+    -Subject 'CN=MyCompany' `
     -CertStoreLocation 'Cert:\CurrentUser\My' `
     -KeySpec KeyExchange
 
