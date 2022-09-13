@@ -2,7 +2,7 @@
 # Azure Automation Account script that uses an existing connection and connect to Exchange Online v2 API to get mailboxes.
 # Requires ExchangeOnlineManagement module
 
-$Conn = Get-AutomationConnection -Name "MyCompanyConnection"
+$Conn = Get-AutomationConnection -Name "<MyConnection>"
 
 Connect-ExchangeOnline -CertificateThumbprint $Conn.CertificateThumbprint `
                         -AppId $Conn.ApplicationID `

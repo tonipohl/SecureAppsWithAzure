@@ -8,4 +8,18 @@ This information is aimed at administrators and developers who want to learn mor
 
 You can find an article how to use a Key Vault with a System Managed Identity and an Azure Logic App at https://blog.atwork.at/post/Azure-Logic-Apps-using-Key-Vault-and-Managed-Identity and the Logic App sample ([here](./LogicApps/GetManager.json).  
 
-A blogpost will follow at https://blog.atwork.at describing step-by-step how to use modern auth with creating a certificate and using that in Azure Automation Accounts. I will update this information and provide the direct link here.
+## Automate Exchange Online at Scale
+
+This repository includes samples for the session "Automate Exchange Online at Scale" held together with [@magrom](http://twitter.com/magrom) at [Microsoft Exchange Community Airlift](https://mecairlift.event.microsoft.com/ ) in September 2022.
+
+## Using System Managed Identity
+
+In this screenshot, we see an Azure Logic App using a System Managed Identity to access a resource in the Microsoft Graph REST API.
+
+![using-managed-identity.png](./LogicApps/using-managed-identity.png)
+
+Don´t forget to add the required permissions to the app or to the Azure resource.
+
+## More to come
+
+We will update this repository from time to time with additional samples. Pls. check blogposts at https://blog.atwork.at with step-by-step How-To´s, such as how to use modern auth with creating a certificate and using that in Azure Automation Accounts.
