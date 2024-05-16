@@ -34,9 +34,9 @@ In this screenshot, we see an Azure Logic App using a System Managed Identity to
 
 Don´t forget to add the required permissions to the app or to the Azure resource.
 
-## Secure your Azure
+## Secure your Azure environments
 
-We will update this repository from time to time with additional samples. Pls. check blogposts at https://blog.atwork.at with step-by-step How-To´s, such as how to use modern auth with creating a certificate and using that in Azure Automation Accounts and check out this repo from time to time.
+Please check blogposts at https://blog.atwork.at with step-by-step How-To´s and check out this repo from time to time.
 
-Thanks for attending and have fun extending copilot with your own data!  
+Thanks for attending! Stay secure in your Azure environments!  
 [Martina Grom](https://twitter.com/magrom) & [Toni Pohl](https://twitter.com/atwork)
