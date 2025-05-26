@@ -6,6 +6,14 @@ Staying compliant and secure is a key requirement for any cloud solution. Azure 
 
 This information is aimed at administrators and developers who want to learn more about the many services in Microsoft Azure in order to implement their applications and make them secure.
 
+## Automate Expiration Warnings for Application Secrets and Certificates 
+
+This repository includes a robust solution designed to automate the process of sending warnings about the expiration of application secrets and certificates to application owners and administrators. This solution, built with Azure Logic Apps, generates a comprehensive report that includes Traffic Light Protocol (TLP) icons, providing a clear visual indication of the status of each app registration. The flows are customizable, allowing administrators to set thresholds for warnings and choose what data to display, leveraging all the benefits of Azure's robust platform. 
+
+IT administrators and application owners will improve compliance by ensuring adherence to security policies and regulatory requirements, maintaining up-to-date application availability. Moreover, administrators will gain foundational knowledge on how to automate similar processes securely, empowering them to extend these practices to other areas of their operations.
+
+Find the solution in the [LogicApps](./LogicApps) directory.
+
 ## Azure compliance resources
 
 - If your organization needs to comply with legal or regulatory standards, start here to learn about compliance in Azure https://learn.microsoft.com/en-us/azure/compliance/

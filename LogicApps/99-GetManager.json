@@ -1,0 +1,103 @@
+{
+    "definition": {
+        "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+        "actions": {
+            "Get_secret": {
+                "inputs": {
+                    "host": {
+                        "connection": {
+                            "name": "@parameters('$connections')['keyvault']['connectionId']"
+                        }
+                    },
+                    "method": "get",
+                    "path": "/secrets/@{encodeURIComponent('secret')}/value"
+                },
+                "runAfter": {},
+                "type": "ApiConnection"
+            },
+            "HTTP": {
+                "inputs": {
+                    "authentication": {
+                        "audience": "https://graph.microsoft.com",
+                        "authority": "https://login.microsoft.com",
+                        "clientId": "<appid>",
+                        "secret": "@body('Get_secret')?['value']",
+                        "tenant": "<tenantid>",
+                        "type": "ActiveDirectoryOAuth"
+                    },
+                    "headers": {
+                        "Content-Type": "application/json"
+                    },
+                    "method": "GET",
+                    "uri": "https://graph.microsoft.com/v1.0/users/@{triggerBody()?['userid']}/manager"
+                },
+                "runAfter": {
+                    "Get_secret": [
+                        "Succeeded"
+                    ]
+                },
+                "runtimeConfiguration": {
+                    "secureData": {
+                        "properties": [
+                            "outputs"
+                        ]
+                    }
+                },
+                "type": "Http"
+            },
+            "Response": {
+                "inputs": {
+                    "body": "@body('HTTP')",
+                    "statusCode": 200
+                },
+                "kind": "Http",
+                "runAfter": {
+                    "HTTP": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "Response"
+            }
+        },
+        "contentVersion": "1.0.0.0",
+        "outputs": {},
+        "parameters": {
+            "$connections": {
+                "defaultValue": {},
+                "type": "Object"
+            }
+        },
+        "triggers": {
+            "manual": {
+                "inputs": {
+                    "schema": {
+                        "properties": {
+                            "userid": {
+                                "type": "string"
+                            }
+                        },
+                        "type": "object"
+                    }
+                },
+                "kind": "Http",
+                "type": "Request"
+            }
+        }
+    },
+    "parameters": {
+        "$connections": {
+            "value": {
+                "keyvault": {
+                    "connectionId": "/subscriptions/<subscriptionid>/resourceGroups/RG-SecureApps/providers/Microsoft.Web/connections/keyvault-name",
+                    "connectionName": "keyvault-name",
+                    "connectionProperties": {
+                        "authentication": {
+                            "type": "ManagedServiceIdentity"
+                        }
+                    },
+                    "id": "/subscriptions/<subscriptionid>/providers/Microsoft.Web/locations/westus/managedApis/keyvault"
+                }
+            }
+        }
+    }
+}
