@@ -1,1 +1,502 @@
-{}
+{
+    "definition": {
+        "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+        "contentVersion": "1.0.0.0",
+        "triggers": {
+            "When_a_HTTP_request_is_received": {
+                "type": "Request",
+                "kind": "Http"
+            }
+        },
+        "actions": {
+            "getOwners": {
+                "runAfter": {
+                    "initsend": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "ApiConnection",
+                "inputs": {
+                    "host": {
+                        "connection": {
+                            "name": "@parameters('$connections')['azuretables']['connectionId']"
+                        }
+                    },
+                    "method": "get",
+                    "path": "/v2/storageAccounts/@{encodeURIComponent(encodeURIComponent('AccountNameFromSettings'))}/tables/@{encodeURIComponent(variables('config')?['tableRecipients'])}/entities",
+                    "queries": {
+                        "$filter": "PartitionKey eq 'werner@tpe5.onmicrosoft.com' or PartitionKey eq 'martina@atwork.fun'"
+                    }
+                }
+            },
+            "initBody": {
+                "runAfter": {
+                    "initSuccessIcon": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "InitializeVariable",
+                "inputs": {
+                    "variables": [
+                        {
+                            "name": "body",
+                            "type": "string",
+                            "value": "<table><thead><tr><th style=\"text-align:left;\">App Id</th><th style=\"text-align:left;\">Name</th>           <th style=\"text-align:left;\">App name</th>           <th style=\"text-align:left;\">Type</th>             <th style=\"text-align:left;\">Expires on</th>            <th style=\"text-align:left;\">Expires in</th></tr></thead><tbody>"
+                        }
+                    ]
+                }
+            },
+            "initDangerIcon": {
+                "runAfter": {
+                    "initEmailTemp": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "InitializeVariable",
+                "inputs": {
+                    "variables": [
+                        {
+                            "name": "dangerIcon",
+                            "type": "string",
+                            "value": "<td><span style='font-size: 20px;'><img alt=\"danger sign\" src=\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABIAAAATCAYAAACdkl3yAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsEAAA7BAbiRa+0AAAITSURBVDhPpZPPaxNBFMffm2x2Nz+2SbVhCfQHWnuRgEgPFrzYagQPXnrwWBFFxEMr9OhFaRH/AfEgevKi9D/wIoLgSfwBhXhQ1HqKNOxssuuGZMaZcRrUnUShH3i8eY/3vjO7Mw/+BYViJXLdKQbg6NT/04LscQruwwCcZgAu09YLMfeSkvzVL5OTOV1qhgNYovmOaOr/JpA2kt8Ox/2ablOg9lIEQ3AfCX9Rp0aCGdLCqn/K2/n0XsZEZQUhONeEyIoOB2BpjKHv93U4gPfZOP++u8Xq9YKMlVATDnrCbQgbnHAPZ+MWKX5uWOCm/zX/kcxF7xrX5VoJ2dBZ5oAH5DqFZQE6jtghtYeCx/EV6ZWQKFqS3gw3K2h42D4Sra5OayGYVVkjI3WAc479Dx/nlBBHbqmsCc7EHQgn73UISDC7d6IdlTGQbN7l7do8g6SrM3+BCNnasa9KiGXIK5U0YF9aid2nj3viG1JPQEImJlr2udMNJWQXvC3hzFt2ogQCGuoojV95gouLPR0BBLZ33zQOYubkuBhHhnoVGq/fPKQlfsFnZsrU8t6YGkxGrWLSrp+/rNv/ZLdanaZu+bUoHDm01Cl1wqWzN3SbGT5/phT6U7cDZ6wZkFw3wBxTRvK9IFOI2rNHn0fLF07q8gFDX1trba2cffZigXXjw8TJFwiBb5kTC2/tB/e2EXH4o9ofAD8BRIXsOG4BpbMAAAAASUVORK5CYII=\" /></span></td>"
+                        }
+                    ]
+                }
+            },
+            "initEmailWidth": {
+                "runAfter": {
+                    "initBody": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "InitializeVariable",
+                "inputs": {
+                    "variables": [
+                        {
+                            "name": "emailWidth",
+                            "type": "string",
+                            "value": "650pt"
+                        }
+                    ]
+                }
+            },
+            "initSortedApps": {
+                "runAfter": {
+                    "initapps": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "InitializeVariable",
+                "inputs": {
+                    "variables": [
+                        {
+                            "name": "sortedApps",
+                            "type": "array"
+                        }
+                    ]
+                }
+            },
+            "initSuccessIcon": {
+                "runAfter": {
+                    "initWarningIcon": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "InitializeVariable",
+                "inputs": {
+                    "variables": [
+                        {
+                            "name": "successIcon",
+                            "type": "string",
+                            "value": "<td><span style='font-size: 20px;'><img alt=\"success icon\" src=\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABUAAAAUCAYAAABiS3YzAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsAAAA7AAWrWiQkAAAKESURBVDhPvZRNSBRhGMff550PXXfb2TXBDwhTqIy0IChiEbwEGUFIB+lUoEhmpy5RmBUd6tJBCMKDHjpHl6APsQ7LgkJFSAdpK6GksFj8GHfdxvl6enf2cddpXdpL/S7z/P/zvH+emfedYf8CoGt5Vg62SMw5jIB1DORfHOHD3m/W7Fz7nEkdJZQPXW7vAu7eZsg6hdrahwDwUwbpXmM4+uArxA3yC5SGIuOwtv8Gc+G6UDxvbo8CymttI9KTqo//IMujZBHX24ZF4EiuzDvlsdA6mq7Sn8fcvh1kefgn1TuOAToJMa1ETkVEuTa2rM0MkfRPA8y+WUlgGIIubJknjZn+M9mhZpLF0GC6vV5swXGSZTkktTnJ0DPoVbpdspiNjvLOSvaSLIYaLh75c8oQ1FCV54C0x5kKjjMDTD7jzPqe0kAzRmUxlANvpNJjJ2jsU/gFDKpnrZzex1ucqZpxMJgpn8gM4IK76PVtsgJ6E5VbQhFtKj10zLC4/YaNBq4qV6r6zZfBCUSOUvf6AH50v1BXERfRobIYCqB+ptLDZg7ryw7jUzsOd6svqwqXlZOZCzjnzFOHH0RWWF8IrQu1vhVfSpqkRxYNdj57DSesx3AqM4jvnSTdKSWA1a+o9J9TVe+4b7nOJZIVI47XUlTTWpf4tDeUbwcbpMgdDpAiWSmuAvzWZmAOX+hCKLFYy2rPiZOwTtbfwCAEHp7WRsZIe/hCc6Qiicl6qa5HBvk7Wdsi3r9RDepoZzg29Ah6Czufo/QvRQTWY02mvXpR7GofMhYRliQ+DhQrTAmkySiLjKa0xHS+20/Z0ALYJYf1jd1Zd61BVZXMrprm+SR/4jsl/wHGfgOYIdq8aM7zoAAAAABJRU5ErkJggg==\" /></span></td>"
+                        }
+                    ]
+                }
+            },
+            "initWarningIcon": {
+                "runAfter": {
+                    "initDangerIcon": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "InitializeVariable",
+                "inputs": {
+                    "variables": [
+                        {
+                            "name": "warningIcon",
+                            "type": "string",
+                            "value": "<td><span style='font-size: 20px;'><img alt=\"warning icon\" src=\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABIAAAATCAYAAACdkl3yAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsEAAA7BAbiRa+0AAAHHSURBVDhPzZA9bxNBEIZnb21Oss+HSGLxYSIkEMhIAQXxJUQXRIdEARSp6CIkJCpoKPhwkp8R/gA/AH5AsHXYMo0LC9G4QRSWm2Cju/PuMHs78sXyWYArnmbed27v3dmBv2FYP11hOReH61x00z/nimEbg+snuJXJH4NUhDXUqqyx95JbmQiumUT7/jUhICApwBGhPHK26lz90rNfp5k7ESIIx8EdkvYyjS7G398mOoO5E8UN/y5o+EgyPSOEkoWTV5z1boc7EzInomkkhWyTFJBbBrHykCQdRZT6V99MOUNmkGr4D6jcMFoUL4K8sCdA5tF41PG9KDhzy+jDzATpr+ACwhu25l32aUhrt4JWN6qZHVpvmQ0aeI/p6ipbYup8AqpwY9w8f4dtwlQQdsoeKucV2wSNdPcstPYBTfVIsp8OUj/DZ1ROWceEPcD+e7ol5oaFdnUT25/vs02DsOWtoMYXbFPcVQD/NkDuGDcmCB2PXmNrK2/MJEhH8jkt9CjblFEX8Mc7BHXAjRTa1SU1/rBpdLJJXV+qKIjpD1E0/l8QMv9NHl+7nATFn0q7JJ4mXxbBKTyxEwWlZRhLL2kuAsoBq/8GgN944pZiber5IQAAAABJRU5ErkJggg==\" /></span></td>"
+                        }
+                    ]
+                }
+            },
+            "initapps": {
+                "runAfter": {
+                    "initEmailWidth": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "InitializeVariable",
+                "inputs": {
+                    "variables": [
+                        {
+                            "name": "apps",
+                            "type": "array"
+                        }
+                    ]
+                }
+            },
+            "ownersLoop": {
+                "foreach": "@body('getOwners')?['value']",
+                "actions": {
+                    "foreachapp": {
+                        "foreach": "@body('getOwnerApps')?['value']",
+                        "actions": {
+                            "appsLoop": {
+                                "foreach": "@sort(body('getsecrets')?['value'],'expiresInDays')",
+                                "actions": {
+                                    "append": {
+                                        "type": "AppendToArrayVariable",
+                                        "inputs": {
+                                            "name": "apps",
+                                            "value": {
+                                                "app": "@{items('appsLoop')?['appName']}",
+                                                "days": "@items('appsLoop')?['expiresInDays']",
+                                                "expires": "@{formatDateTime(item()?['endDateTime'], 'yyyy-MM-dd')}",
+                                                "icon": "@{if(less(item()?['expiresInDays'],1),variables('successIcon'),if(less(item()?['expiresInDays'],variables('config')?['threshold']),variables('warningIcon'),variables('dangerIcon')))}",
+                                                "id": "@{items('appsLoop')?['PartitionKey']}",
+                                                "owner": "@{item()?['userPrincipalName']}",
+                                                "secret": "@{items('appsLoop')?['displayName']}",
+                                                "type": "@{items('appsLoop')?['type']}"
+                                            }
+                                        }
+                                    }
+                                },
+                                "runAfter": {
+                                    "getsecrets": [
+                                        "Succeeded"
+                                    ]
+                                },
+                                "type": "Foreach"
+                            },
+                            "getsecrets": {
+                                "type": "ApiConnection",
+                                "inputs": {
+                                    "host": {
+                                        "connection": {
+                                            "name": "@parameters('$connections')['azuretables']['connectionId']"
+                                        }
+                                    },
+                                    "method": "get",
+                                    "path": "/v2/storageAccounts/@{encodeURIComponent(encodeURIComponent('AccountNameFromSettings'))}/tables/@{encodeURIComponent(variables('config')?['tableSecrets'])}/entities",
+                                    "queries": {
+                                        "$filter": "PartitionKey eq '@{item()?['PartitionKey']}'"
+                                    }
+                                }
+                            }
+                        },
+                        "runAfter": {
+                            "setapps": [
+                                "Succeeded"
+                            ]
+                        },
+                        "type": "Foreach"
+                    },
+                    "foreachsorted": {
+                        "foreach": "@variables('sortedApps')",
+                        "actions": {
+                            "ifshowall": {
+                                "actions": {
+                                    "addRowall": {
+                                        "type": "AppendToStringVariable",
+                                        "inputs": {
+                                            "name": "body",
+                                            "value": "<tr><td>@{items('foreachsorted')?['app']}</td>\n<td>@{items('foreachsorted')?['id']}</td>\n<td>@{items('foreachsorted')?['type']}</td>\n<td>@{items('foreachsorted')?['secret']}</td>\n<td>@{formatDateTime(item()?['expires'], 'yyyy-MM-dd')}</td>\n<td>@{item()?['days']}</td>\n<td style=\\\"text-align: right;\\\">@{items('foreachsorted')?['icon']}</td></tr>"
+                                        }
+                                    },
+                                    "setsend1": {
+                                        "runAfter": {
+                                            "addRowall": [
+                                                "Succeeded"
+                                            ]
+                                        },
+                                        "type": "SetVariable",
+                                        "inputs": {
+                                            "name": "send",
+                                            "value": true
+                                        }
+                                    }
+                                },
+                                "else": {
+                                    "actions": {
+                                        "ifwarning": {
+                                            "actions": {
+                                                "addRowwarning": {
+                                                    "type": "AppendToStringVariable",
+                                                    "inputs": {
+                                                        "name": "body",
+                                                        "value": "<tr><td>@{items('foreachsorted')?['app']}</td>\n<td>@{items('foreachsorted')?['id']}</td>\n<td>@{items('foreachsorted')?['type']}</td>\n<td>@{items('foreachsorted')?['secret']}</td>\n<td>@{item()?['owner']}</td>\n<td>@{formatDateTime(item()?['expires'], 'yyyy-MM-dd')}</td>\n<td>@{item()?['days']}</td>\n<td style=\\\"text-align: right;\\\">@{items('foreachsorted')?['icon']}</td></tr>"
+                                                    }
+                                                },
+                                                "setsend2": {
+                                                    "runAfter": {
+                                                        "addRowwarning": [
+                                                            "Succeeded"
+                                                        ]
+                                                    },
+                                                    "type": "SetVariable",
+                                                    "inputs": {
+                                                        "name": "send",
+                                                        "value": true
+                                                    }
+                                                }
+                                            },
+                                            "else": {
+                                                "actions": {}
+                                            },
+                                            "expression": {
+                                                "and": [
+                                                    {
+                                                        "lessOrEquals": [
+                                                            "@int(item()?['days'])",
+                                                            "@int(variables('config')?['threshold'])"
+                                                        ]
+                                                    }
+                                                ]
+                                            },
+                                            "type": "If"
+                                        }
+                                    }
+                                },
+                                "expression": {
+                                    "and": [
+                                        {
+                                            "equals": [
+                                                true,
+                                                true
+                                            ]
+                                        }
+                                    ]
+                                },
+                                "type": "If"
+                            }
+                        },
+                        "runAfter": {
+                            "setsendfalse": [
+                                "Succeeded"
+                            ]
+                        },
+                        "type": "Foreach"
+                    },
+                    "getOwnerApps": {
+                        "type": "ApiConnection",
+                        "inputs": {
+                            "host": {
+                                "connection": {
+                                    "name": "@parameters('$connections')['azuretables']['connectionId']"
+                                }
+                            },
+                            "method": "get",
+                            "path": "/v2/storageAccounts/@{encodeURIComponent(encodeURIComponent('AccountNameFromSettings'))}/tables/@{encodeURIComponent(variables('config')?['tableOwners'])}/entities",
+                            "queries": {
+                                "$filter": "userPrincipalName eq '@{items('ownersLoop')?['PartitionKey']}'"
+                            }
+                        }
+                    },
+                    "setClosingTag": {
+                        "runAfter": {
+                            "foreachsorted": [
+                                "Succeeded"
+                            ]
+                        },
+                        "type": "AppendToStringVariable",
+                        "inputs": {
+                            "name": "body",
+                            "value": "</tbody></table>"
+                        }
+                    },
+                    "setStartingTag": {
+                        "runAfter": {
+                            "setsorted": [
+                                "Succeeded"
+                            ]
+                        },
+                        "type": "SetVariable",
+                        "inputs": {
+                            "name": "body",
+                            "value": "<table><thead><tr>  <th style=\"text-align:left;\">App Name</th>\n<th style=\\\"text-align:left;\\\">App Id</th>\n<th style=\"text-align:left;\">Type</th>\n<th style=\"text-align:left;\">Secret Name</th>\n<th style=\"text-align:left;\">Expires on</th>\n<th style=\"text-align:left;\">Days</th>\n<th style=\"text-align:right;\">Status</th></tr></thead><tbody>"
+                        }
+                    },
+                    "setapps": {
+                        "runAfter": {
+                            "getOwnerApps": [
+                                "Succeeded"
+                            ]
+                        },
+                        "type": "SetVariable",
+                        "inputs": {
+                            "name": "apps",
+                            "value": []
+                        }
+                    },
+                    "setsorted": {
+                        "runAfter": {
+                            "foreachapp": [
+                                "Succeeded"
+                            ]
+                        },
+                        "type": "SetVariable",
+                        "inputs": {
+                            "name": "sortedApps",
+                            "value": "@sort(variables('apps'),'days')"
+                        }
+                    },
+                    "setsendfalse": {
+                        "runAfter": {
+                            "setStartingTag": [
+                                "Succeeded"
+                            ]
+                        },
+                        "type": "SetVariable",
+                        "inputs": {
+                            "name": "send",
+                            "value": false
+                        }
+                    },
+                    "ifsend": {
+                        "actions": {
+                            "sendmail": {
+                                "type": "ApiConnection",
+                                "inputs": {
+                                    "host": {
+                                        "connection": {
+                                            "name": "@parameters('$connections')['office365']['connectionId']"
+                                        }
+                                    },
+                                    "method": "post",
+                                    "body": {
+                                        "To": "@{if(equals(variables('config')?['debug'],true),variables('config')?['adminEmail'],items('ownersLoop')?['PartitionKey'])}",
+                                        "Subject": "Expiring application secrets or certificates (@{items('ownersLoop')?['PartitionKey']})",
+                                        "Body": "<p class=\"editor-paragraph\">@{replace(replace(replace(decodeBase64(variables('emailTemp')), '[expiresInDays]', string(variables('config')?['threshold'])), '[text]', variables('body')),'[email]',items('ownersLoop')?['PartitionKey'])}</p>",
+                                        "Importance": "Normal"
+                                    },
+                                    "path": "/v2/Mail"
+                                }
+                            }
+                        },
+                        "runAfter": {
+                            "setClosingTag": [
+                                "Succeeded"
+                            ]
+                        },
+                        "else": {
+                            "actions": {}
+                        },
+                        "expression": {
+                            "and": [
+                                {
+                                    "equals": [
+                                        "@variables('send')",
+                                        true
+                                    ]
+                                }
+                            ]
+                        },
+                        "type": "If"
+                    }
+                },
+                "runAfter": {
+                    "getOwners": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "Foreach",
+                "runtimeConfiguration": {
+                    "concurrency": {
+                        "repetitions": 1
+                    }
+                }
+            },
+            "initsend": {
+                "runAfter": {
+                    "initSortedApps": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "InitializeVariable",
+                "inputs": {
+                    "variables": [
+                        {
+                            "name": "send",
+                            "type": "boolean",
+                            "value": false
+                        }
+                    ]
+                }
+            },
+            "initConfig": {
+                "runAfter": {},
+                "type": "InitializeVariable",
+                "inputs": {
+                    "variables": [
+                        {
+                            "name": "config",
+                            "type": "object",
+                            "value": {
+                                "tableApps": "Apps",
+                                "tableOwners": "Owners",
+                                "tableSecrets": "Secrets",
+                                "tableRecipients": "Recipients",
+                                "threshold": 180,
+                                "showAll": false,
+                                "adminEmail": "toni@tpe5.onmicrosoft.com",
+                                "debug": true
+                            }
+                        }
+                    ]
+                }
+            },
+            "initEmailTemp": {
+                "runAfter": {
+                    "initConfig": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "InitializeVariable",
+                "inputs": {
+                    "variables": [
+                        {
+                            "name": "emailTemp",
+                            "type": "string",
+                            "value": "PCFET0NUWVBFIGh0bWw+DQo8aHRtbCB4bWxuczptc289InVybjpzY2hlbWFzLW1pY3Jvc29mdC1jb206b2ZmaWNlOm9mZmljZSIgeG1sbnM6bXNkdD0idXVpZDpDMkY0MTAxMC02NUIzLTExZDEtQTI5Ri0wMEFBMDBDMTQ4ODIiPg0KPGhlYWQ+DQogIDxtZXRhIGNvbnRlbnQ9InRleHQvaHRtbDsgY2hhcnNldD11dGYtOCINCiAgICAgICAgaHR0cC1lcXVpdj0iQ29udGVudC1UeXBlIj4NCiAgPG1ldGEgY29udGVudD0iZW1haWwgdGVtcGxhdGUgYnkgYXR3b3JrLmF0Ig0KICAgICAgICBuYW1lPSJ0ZW1wbGF0ZSI+DQogIDxzdHlsZT4NCiAgICAgICAgPCEtLQ0KICAgICAgICAvKiBGb250IERlZmluaXRpb25zICovDQogICAgICAgIEBmb250LWZhY2Ugew0KICAgICAgICAgICAgZm9udC1mYW1pbHk6IFdpbmdkaW5nczsNCiAgICAgICAgICAgIHBhbm9zZS0xOiA1IDAgMCAwIDAgMCAwIDAgMCAwOw0KICAgICAgICB9DQoNCiAgICAgICAgQGZvbnQtZmFjZSB7DQogICAgICAgICAgICBmb250LWZhbWlseTogIkNhbWJyaWEgTWF0aCI7DQogICAgICAgICAgICBwYW5vc2UtMTogMiA0IDUgMyA1IDQgNiAzIDIgNDsNCiAgICAgICAgfQ0KDQogICAgICAgIEBmb250LWZhY2Ugew0KICAgICAgICAgICAgZm9udC1mYW1pbHk6IENhbGlicmk7DQogICAgICAgICAgICBwYW5vc2UtMTogMiAxNSA1IDIgMiAyIDQgMyAyIDQ7DQogICAgICAgIH0NCg0KICAgICAgICBAZm9udC1mYWNlIHsNCiAgICAgICAgICAgIGZvbnQtZmFtaWx5OiAiU2Vnb2UgVUkiOw0KICAgICAgICAgICAgcGFub3NlLTE6IDIgMTEgNSAyIDQgMiA0IDIgMiAzOw0KICAgICAgICB9DQoNCiAgICAgICAgQGZvbnQtZmFjZSB7DQogICAgICAgICAgICBmb250LWZhbWlseTogIlNlZ29lIFVJIExpZ2h0IjsNCiAgICAgICAgICAgIHBhbm9zZS0xOiAyIDExIDUgMiA0IDIgNCAyIDIgMzsNCiAgICAgICAgfQ0KICAgICAgICAvKiBTdHlsZSBEZWZpbml0aW9ucyAqLw0KICAgICAgICBwLk1zb05vcm1hbCwgbGkuTXNvTm9ybWFsLCBkaXYuTXNvTm9ybWFsIHsNCiAgICAgICAgICAgIG1hcmdpbjogMGNtOw0KICAgICAgICAgICAgbWFyZ2luLWJvdHRvbTogLjAwMDFwdDsNCiAgICAgICAgICAgIGZvbnQtc2l6ZTogMTEuMHB0Ow0KICAgICAgICAgICAgZm9udC1mYW1pbHk6ICJDYWxpYnJpIixzYW5zLXNlcmlmOw0KICAgICAgICB9DQoNCiAgICAgICAgaDEgew0KICAgICAgICAgICAgbXNvLXN0eWxlLWxpbms6ICJIZWFkaW5nIDEgQ2hhciI7DQogICAgICAgICAgICBtYXJnaW4tdG9wOiAyNC4wcHQ7DQogICAgICAgICAgICBtYXJnaW4tcmlnaHQ6IDBjbTsNCiAgICAgICAgICAgIG1hcmdpbi1ib3R0b206IDBjbTsNCiAgICAgICAgICAgIG1hcmdpbi1sZWZ0OiAwY207DQogICAgICAgICAgICBtYXJnaW4tYm90dG9tOiAuMDAwMXB0Ow0KICAgICAgICAgICAgcGFnZS1icmVhay1hZnRlcjogYXZvaWQ7DQogICAgICAgICAgICBmb250LXNpemU6IDE2LjBwdDsNCiAgICAgICAgICAgIGZvbnQtZmFtaWx5OiAiU2Vnb2UgVUkgTGlnaHQiLHNhbnMtc2VyaWY7DQogICAgICAgICAgICBjb2xvcjogIzJGNTQ5NjsNCiAgICAgICAgICAgIGZvbnQtd2VpZ2h0OiBub3JtYWw7DQogICAgICAgIH0NCg0KICAgICAgICBoMiB7DQogICAgICAgICAgICBtc28tc3R5bGUtbGluazogIkhlYWRpbmcgMiBDaGFyIjsNCiAgICAgICAgICAgIG1hcmdpbjogMGNtOw0KICAgICAgICAgICAgbWFyZ2luLWJvdHRvbTogLjAwMDFwdDsNCiAgICAgICAgICAgIGZvbnQtc2l6ZTogMTYuMHB0Ow0KICAgICAgICAgICAgZm9udC1mYW1pbHk6ICJDYWxpYnJpIixzYW5zLXNlcmlmOw0KICAgICAgICAgICAgZm9udC13ZWlnaHQ6IG5vcm1hbDsNCiAgICAgICAgfQ0KDQogICAgICAgIGgzIHsNCiAgICAgICAgICAgIG1zby1zdHlsZS1saW5rOiAiSGVhZGluZyAzIENoYXIiOw0KICAgICAgICAgICAgbWFyZ2luLXRvcDogMi4wcHQ7DQogICAgICAgICAgICBtYXJnaW4tcmlnaHQ6IDBjbTsNCiAgICAgICAgICAgIG1hcmdpbi1ib3R0b206IDIuMHB0Ow0KICAgICAgICAgICAgbWFyZ2luLWxlZnQ6IDBjbTsNCiAgICAgICAgICAgIGxpbmUtaGVpZ2h0OiAxMzAlOw0KICAgICAgICAgICAgcGFnZS1icmVhay1hZnRlcjogYXZvaWQ7DQogICAgICAgICAgICBmb250LXNpemU6IDE0LjBwdDsNCiAgICAgICAgICAgIGZvbnQtZmFtaWx5OiAiQ2FsaWJyaSIsc2Fucy1zZXJpZjsNCiAgICAgICAgICAgIGZvbnQtd2VpZ2h0OiBub3JtYWw7DQogICAgICAgIH0NCg0KICAgICAgICBoNCB7DQogICAgICAgICAgICBtc28tc3R5bGUtbGluazogIkhlYWRpbmcgNCBDaGFyIjsNCiAgICAgICAgICAgIG1hcmdpbi10b3A6IDIuMHB0Ow0KICAgICAgICAgICAgbWFyZ2luLXJpZ2h0OiAwY207DQogICAgICAgICAgICBtYXJnaW4tYm90dG9tOiAyLjBwdDsNCiAgICAgICAgICAgIG1hcmdpbi1sZWZ0OiAwY207DQogICAgICAgICAgICBsaW5lLWhlaWdodDogMTMwJTsNCiAgICAgICAgICAgIHBhZ2UtYnJlYWstYWZ0ZXI6IGF2b2lkOw0KICAgICAgICAgICAgZm9udC1zaXplOiAxMi4wcHQ7DQogICAgICAgICAgICBmb250LWZhbWlseTogIkNhbGlicmkiLHNhbnMtc2VyaWY7DQogICAgICAgICAgICBmb250LXdlaWdodDogYm9sZDsNCiAgICAgICAgfQ0KDQogICAgICAgIGE6bGluaywgc3Bhbi5Nc29IeXBlcmxpbmsgew0KICAgICAgICAgICAgY29sb3I6IGJsdWU7DQogICAgICAgICAgICB0ZXh0LWRlY29yYXRpb246IHVuZGVybGluZTsNCiAgICAgICAgfQ0KDQogICAgICAgIGE6dmlzaXRlZCwgc3Bhbi5Nc29IeXBlcmxpbmtGb2xsb3dlZCB7DQogICAgICAgICAgICBjb2xvcjogIzk1NEY3MjsNCiAgICAgICAgICAgIHRleHQtZGVjb3JhdGlvbjogdW5kZXJsaW5lOw0KICAgICAgICB9DQoNCiAgICAgICAgcCB7DQogICAgICAgICAgICBtYXJnaW4tcmlnaHQ6IDBjbTsNCiAgICAgICAgICAgIG1hcmdpbi1sZWZ0OiAwY207DQogICAgICAgICAgICBmb250LXNpemU6IDExLjBwdDsNCiAgICAgICAgICAgIGZvbnQtZmFtaWx5OiAiQ2FsaWJyaSIsc2Fucy1zZXJpZjsNCiAgICAgICAgICAgIGxpbmUtaGVpZ2h0OjEzLjVwdDsNCiAgICAgICAgfQ0KDQogICAgICAgIHNwYW4uSGVhZGluZzJDaGFyIHsNCiAgICAgICAgICAgIG1zby1zdHlsZS1uYW1lOiAiSGVhZGluZyAyIENoYXIiOw0KICAgICAgICAgICAgbXNvLXN0eWxlLWxpbms6ICJIZWFkaW5nIDIiOw0KICAgICAgICAgICAgZm9udC1mYW1pbHk6ICJTZWdvZSBVSSIsc2Fucy1zZXJpZjsNCiAgICAgICAgfQ0KDQogICAgICAgIHNwYW4uSGVhZGluZzFDaGFyIHsNCiAgICAgICAgICAgIG1zby1zdHlsZS1uYW1lOiAiSGVhZGluZyAxIENoYXIiOw0KICAgICAgICAgICAgbXNvLXN0eWxlLWxpbms6ICJIZWFkaW5nIDEiOw0KICAgICAgICAgICAgZm9udC1mYW1pbHk6ICJTZWdvZSBVSSBMaWdodCIsc2Fucy1zZXJpZjsNCiAgICAgICAgICAgIGNvbG9yOiAjMkY1NDk2Ow0KICAgICAgICB9DQoNCiAgICAgICAgc3Bhbi5IZWFkaW5nM0NoYXIgew0KICAgICAgICAgICAgbXNvLXN0eWxlLW5hbWU6ICJIZWFkaW5nIDMgQ2hhciI7DQogICAgICAgICAgICBtc28tc3R5bGUtbGluazogIkhlYWRpbmcgMyI7DQogICAgICAgICAgICBmb250LWZhbWlseTogIlNlZ29lIFVJIixzYW5zLXNlcmlmOw0KICAgICAgICB9DQoNCiAgICAgICAgc3Bhbi5IZWFkaW5nNENoYXIgew0KICAgICAgICAgICAgbXNvLXN0eWxlLW5hbWU6ICJIZWFkaW5nIDQgQ2hhciI7DQogICAgICAgICAgICBtc28tc3R5bGUtbGluazogIkhlYWRpbmcgNCI7DQogICAgICAgICAgICBmb250LWZhbWlseTogIlNlZ29lIFVJIixzYW5zLXNlcmlmOw0KICAgICAgICAgICAgZm9udC13ZWlnaHQ6IGJvbGQ7DQogICAgICAgIH0NCg0KICAgICAgICBzcGFuLnByZWhlYWRlciB7DQogICAgICAgICAgICBtc28tc3R5bGUtbmFtZTogcHJlaGVhZGVyOw0KICAgICAgICAgICAgZGlzcGxheTogbm9uZTsNCiAgICAgICAgfQ0KDQogICAgICAgIC5Nc29DaHBEZWZhdWx0IHsNCiAgICAgICAgICAgIGZvbnQtZmFtaWx5OiAiQ2FsaWJyaSIsc2Fucy1zZXJpZjsNCiAgICAgICAgfQ0KDQogICAgICAgIC5Nc29QYXBEZWZhdWx0IHsNCiAgICAgICAgICAgIG1hcmdpbi1ib3R0b206IDguMHB0Ow0KICAgICAgICAgICAgbGluZS1oZWlnaHQ6IDEwNyU7DQogICAgICAgIH0NCiAgICAgICAgLyogUGFnZSBEZWZpbml0aW9ucyAqLw0KICAgICAgICBAcGFnZSBXb3JkU2VjdGlvbjEgew0KICAgICAgICAgICAgc2l6ZTogNjEyLjBwdCA3OTIuMHB0Ow0KICAgICAgICAgICAgbWFyZ2luOiA3Mi4wcHQgNzIuMHB0IDcyLjBwdCA3Mi4wcHQ7DQogICAgICAgIH0NCg0KICAgICAgICBkaXYuV29yZFNlY3Rpb24xIHsNCiAgICAgICAgICAgIHBhZ2U6IFdvcmRTZWN0aW9uMTsNCiAgICAgICAgfQ0KICAgICAgICAvKiBMaXN0IERlZmluaXRpb25zICovDQogICAgICAgIG9sIHsNCiAgICAgICAgICAgIG1hcmdpbi1ib3R0b206IDBjbTsNCiAgICAgICAgfQ0KDQogICAgICAgIHVsIHsNCiAgICAgICAgICAgIG1hcmdpbi1ib3R0b206IDBjbTsNCiAgICAgICAgfQ0KICAgICAgICAvKiBmaXggZ2VuZXJhdGVkIEhUTUwgdGFibGVzICovDQogICAgICAgIHRyID4gdGQgPiBwID4gc3BhbiB7DQogICAgICAgICAgICBmb250LXNpemU6IDAuOGVtOw0KICAgICAgICAgICAgZm9udC1mYW1pbHk6ICJDYWxpYnJpIixzYW5zLXNlcmlmOw0KICAgICAgICB9ICANCiAgICAgICAgdWwgPiBsaSB7DQogICAgICAgICAgZm9udC1mYW1pbHk6ICJDYWxpYnJpIixzYW5zLXNlcmlmOyAgICAgDQogICAgICAgICAgZm9udC1zaXplOiAxMS4wcHQ7DQogICAgICAgICAgY29sb3I6ICMyMjIyMjI7ICANCiAgICAgICAgICBsaW5lLWhlaWdodDoxMy41cHQ7ICANCiAgICAgICAgfQ0KICAgICAgICAgICAgICAgIC0tPg0KICB0YWJsZSB0aCwgdGFibGUgdGQgew0KICBmb250LXNpemU6IDEzcHg7DQpwYWRkaW5nOiAwIDVweDsNCn0NCiAgPC9zdHlsZT4NCiAgPHRpdGxlPjwvdGl0bGU+DQoNCjwhLS1baWYgZ3RlIG1zbyA5XT48eG1sPg0KPG1zbzpDdXN0b21Eb2N1bWVudFByb3BlcnRpZXM+DQo8bXNvOl9kbGNfRG9jSWQgbXNkdDpkdD0ic3RyaW5nIj5RTk1BUzVEREQ0UkYtMTQyMzY3NDA3NC02MTkzOTwvbXNvOl9kbGNfRG9jSWQ+DQo8bXNvOl9kbGNfRG9jSWRJdGVtR3VpZCBtc2R0OmR0PSJzdHJpbmciPjU4N2VlNTIzLTE5NTUtNDhlYS05NjEzLWE3ZDU1ZWQ2NDBkMDwvbXNvOl9kbGNfRG9jSWRJdGVtR3VpZD4NCjxtc286X2RsY19Eb2NJZFVybCBtc2R0OmR0PSJzdHJpbmciPmh0dHBzOi8vY2xvdWRleHBlcnRzLnNoYXJlcG9pbnQuY29tL3NpdGVzL2F0d29ya2F0L19sYXlvdXRzLzE1L0RvY0lkUmVkaXIuYXNweD9JRD1RTk1BUzVEREQ0UkYtMTQyMzY3NDA3NC02MTkzOSwgUU5NQVM1RERENFJGLTE0MjM2NzQwNzQtNjE5Mzk8L21zbzpfZGxjX0RvY0lkVXJsPg0KPC9tc286Q3VzdG9tRG9jdW1lbnRQcm9wZXJ0aWVzPg0KPC94bWw+PCFbZW5kaWZdLS0+DQo8L2hlYWQ+PCEtLSBlbWFpbCB0ZW1wbGF0ZSAyMDE4IGJ5IGF0d29yay5hdCAtLT4NCjxib2R5IGxhbmc9IkVOLVVTIg0KICAgICAgbGluaz0iYmx1ZSINCiAgICAgIHZsaW5rPSIjOTU0RjcyIj4NCiAgPGRpdiBjbGFzcz0iV29yZFNlY3Rpb24xIj4NCiAgICA8cCBjbGFzcz0iTXNvTm9ybWFsIj4mbmJzcDs8L3A+DQogICAgPGRpdiBhbGlnbj0iY2VudGVyIj4NCiAgICAgIDx0YWJsZSBib3JkZXI9IjAiDQogICAgICAgICAgICAgY2VsbHBhZGRpbmc9IjAiDQogICAgICAgICAgICAgY2VsbHNwYWNpbmc9IjAiDQogICAgICAgICAgICAgY2xhc3M9Ik1zb05vcm1hbFRhYmxlIg0KICAgICAgICAgICAgIHN0eWxlPSd3aWR0aDoxMDAuMCU7Ym9yZGVyLWNvbGxhcHNlOmNvbGxhcHNlJw0KICAgICAgICAgICAgIHdpZHRoPSIxMDAlIj4NCiAgICAgICAgPHRyPg0KICAgICAgICAgIDx0ZCBzdHlsZT0nd2lkdGg6MTAwLjAlO2JhY2tncm91bmQ6I0YxRjFGMTtwYWRkaW5nOjBjbSAwY20gMGNtIDBjbScNCiAgICAgICAgICAgICAgdmFsaWduPSJ0b3AiDQogICAgICAgICAgICAgIHdpZHRoPSIxMDAlIj4NCiAgICAgICAgICAgIDxkaXYgYWxpZ249ImNlbnRlciI+DQogICAgICAgICAgICAgIDwhLS0gdGV4dCBhYm92ZSB0aGUgdGFibGUgaWYgbmVlZGVkIC0tPg0KICAgICAgICAgICAgICA8dGFibGUgYm9yZGVyPSIwIg0KICAgICAgICAgICAgICAgICAgICAgY2VsbHBhZGRpbmc9IjAiDQogICAgICAgICAgICAgICAgICAgICBjZWxsc3BhY2luZz0iMCINCiAgICAgICAgICAgICAgICAgICAgIGNsYXNzPSJNc29Ob3JtYWxUYWJsZSINCiAgICAgICAgICAgICAgICAgICAgIHN0eWxlPSd3aWR0aDpAe3ZhcmlhYmxlcygnZW1haWxXaWR0aCcpfTtib3JkZXItY29sbGFwc2U6Y29sbGFwc2UnDQogICAgICAgICAgICAgICAgICAgICB3aWR0aD0iODAwIj4NCiAgICAgICAgICAgICAgICA8dHI+DQogICAgICAgICAgICAgICAgICA8dGQgc3R5bGU9J3dpZHRoOkB7dmFyaWFibGVzKCdlbWFpbFdpZHRoJyl9O2JhY2tncm91bmQ6I0YxRjFGMTtwYWRkaW5nOjBwdCAwcHQgMi4yNXB0IDBwdCcNCiAgICAgICAgICAgICAgICAgICAgICB3aWR0aD0iODAwIj4NCiAgICAgICAgICAgICAgICAgICAgPHAgYWxpZ249InJpZ2h0Ig0KICAgICAgICAgICAgICAgICAgICAgICBzdHlsZT0ndGV4dC1hbGlnbjpyaWdodCc+PC9wPg0KICAgICAgICAgICAgICAgICAgPC90ZD4NCiAgICAgICAgICAgICAgICA8L3RyPg0KICAgICAgICAgICAgICA8L3RhYmxlPg0KICAgICAgICAgICAgPC9kaXY+DQogICAgICAgICAgICA8ZGl2IGFsaWduPSJjZW50ZXIiPg0KICAgICAgICAgICAgICA8dGFibGUgYm9yZGVyPSIxIg0KICAgICAgICAgICAgICAgICAgICAgY2VsbHBhZGRpbmc9IjAiDQogICAgICAgICAgICAgICAgICAgICBjZWxsc3BhY2luZz0iMCINCiAgICAgICAgICAgICAgICAgICAgIGNsYXNzPSJNc29Ob3JtYWxUYWJsZSINCiAgICAgICAgICAgICAgICAgICAgIHN0eWxlPSdib3JkZXItY29sbGFwc2U6Y29sbGFwc2U7Ym9yZGVyOm5vbmUnPg0KICAgICAgICAgICAgICAgIDx0cj4NCiAgICAgICAgICAgICAgICAgIDx0ZCBzdHlsZT0nYm9yZGVyOnNvbGlkICM1OTU5NTkgMS4wcHQ7cGFkZGluZzouNzVwdCAuNzVwdCAuNzVwdCAuNzVwdCc+DQogICAgICAgICAgICAgICAgICAgIDxkaXYgYWxpZ249ImNlbnRlciI+DQogICAgICAgICAgICAgICAgICAgICAgPHRhYmxlIGJvcmRlcj0iMCINCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgY2VsbHBhZGRpbmc9IjAiDQogICAgICAgICAgICAgICAgICAgICAgICAgICAgIGNlbGxzcGFjaW5nPSIwIg0KICAgICAgICAgICAgICAgICAgICAgICAgICAgICBjbGFzcz0iTXNvTm9ybWFsVGFibGUiDQogICAgICAgICAgICAgICAgICAgICAgICAgICAgIHN0eWxlPSd3aWR0aDpAe3ZhcmlhYmxlcygnZW1haWxXaWR0aCcpfTtiYWNrZ3JvdW5kOndoaXRlO2JvcmRlci1jb2xsYXBzZTpjb2xsYXBzZScNCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgd2lkdGg9IjgwMCI+DQogICAgICAgICAgICAgICAgICAgICAgICA8dHI+DQogICAgICAgICAgICAgICAgICAgICAgICAgIDwhLS0gY29tcGFueSBsb2dvIC0tPg0KICAgICAgICAgICAgICAgICAgICAgICAgICA8dGQgc3R5bGU9J3BhZGRpbmc6MTguNzVwdCAwY20gMTUuMHB0IDIyLjVwdCc+DQogICAgICAgICAgICAgICAgICAgICAgICAgICAgPHAgY2xhc3M9Ik1zb05vcm1hbCINCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBzdHlsZT0nbGluZS1oZWlnaHQ6MTA1JSc+PHNwYW4+PGltZyBhbHQ9IkxvZ28iDQogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBoZWlnaHQ9IjIwIg0KICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgc3JjPSJkYXRhOmltYWdlL3BuZztiYXNlNjQsaVZCT1J3MEtHZ29BQUFBTlNVaEVVZ0FBQUdJQUFBQVVDQUlBQUFENXZIK0ZBQUFBQkdkQlRVRUFBSy9JTndXSzZRQUFBQmwwUlZoMFUyOW1kSGRoY21VQVFXUnZZbVVnU1cxaFoyVlNaV0ZrZVhISlpUd0FBQWt4U1VSQlZIamE3Rmg1Y0ZQbkVYK1hUdXV3Wk5tU0wzemdBOXRnWTV0d21kTmdLSVFKelpSMktBengwSExEZEtCTkoySFNCRnBhU2txblRUelF1aVdRTklGaEFvUVFZbzV3Z3czRUY4YjNiV3pKc21WSjFtVS9uZS9vU2phMmJHeEQveWd6YWZybWsvVG1lL3UrYjcvZjd2NTJWeWpMc3NqL3IrZGQyUGZ6MkZjcnUvYWZxM1M0cVJlVUo3NkhHRmtkN3UwblN0czdyR0dCd2kxTDQxK09ON0dhM3ErMDVxdmZJWmdjTHNic3BPRG94bjdYU3dvNlkxL1p6ZG9mM3E1YmJYTTBmVmRnUWxFRXgxQzRHZmgrR1RCNWFLdlhvMWdQUmR2L2grTjBERzVpV2FwYTgzNlByUkRIOEVFc1VSNkc4Z1hjY0lVb00xeStna3RJWVZKdHZORGM4NG1ITmhFWUIwWFI4dlpmYzNBUnhUaDRlSEJtekVFaEwvTGpPeTMzcW5XL1h6ODlYQzRhdFlYTjRmN2djbU5abXlreld2YkxWWWxpQVcrVVFMZkYvczVuNVZsVFZUOWJGQWVMdzB4RGwrVmFsYTVPWXpPU2JpZEYwd3dEYnNFbHNBQU9GaWtYem9vTFdwWVdKdUp6L0JkcDB0a3VsblhXZGxvdGRyZUw5cVowbkdGM0xvK2ZrNmdjRDQ3S0R0UHZ6bFJsSlFmdldaazhzTys0TUhsb3NyYnpMMWFIQ1g4cU5sUXljSEFrU0pRNmY4b3BXY0RVRnYyL0dycStBc1g0SEQ2SXFBMDNHTllyU1ROSVRNaVBlSnpJZDgvVmFwc05nUkwrWDNObmpEUUR1KzE0NmVuckxRaU9mbDM0cEVGbk83VXJDME5IK1AvaGkzVWZGelJkcVRlc3k0b1djRGtIemxmLytlczZtOG1CVUF3eUxJbDZWV045Q2dvNXFUR3kvTTJ6NXNRSER6ejcvTUdUSGNkS1RWWW40cWFIMTdWN0pBSmlRYkxxMldCelVmU0hsK3NQWHFpejZ2b2Z0Sm0yNXlRS3VNUkVNSUd6TEU0K2ErcXZSRkY4U0J1YUljMWt2Y2IwcGJHdnFyUjFkODYwYnpLakR5b2xDMjNPeGhiZE1aQk1pOW9Ud0l0Z1dKcEx5RU1EYzNBTVdaSVM4bW1YN2RTMzZyZFhKeWtEQTRhTjNHMDdXNnhCeEx3SXVhRFQ3SUQ3ZDErM0prY0VEZ2tZYkk1VEQ5VklBSGRwaWdvdyt1UnV5M3NuS3hBQ1Q0Z1BmaTA5TkVUS0J6dXpUelZ6ZTVpYVRzdjU4czZxVnZQYUR4K1UvR0c1VXNwWEcvdTNuaWkza2g2ZWhMZHVkbVJTUktEM0ZSYkJXSGIxekFpWGgyWkhtdjlCbzJIdjZZcDdOVDFnNVBBb1dkN0dURDZYZUg1Qm9Bck1odkhzZkxYbVVGbmIzbDZ5akhSMVNvVkpNUFMyb3FhdWZBQWxYclZKS2t6MkY5NlpFM2ZxZnJ0QlQzNVcxUDdtcXBTaCtTdVB1eWpTTFZVSVQyeWFzZlp2eFNaOS85V3FibitZVGhhMTYvVWtMaVIrOFlNRWNMMmoxNXRoTWpsS2N1czMyVXFwWUV5RlR4YTI1dWFYcUx0c1g1YXF0eTFOdUYzYlk3VTRVUTZXOTBiNmx1eUVVY0k2Y0RFZlNDSWU0YWJvL1dlclByalM2T2gzSXdUMjQ2ell3eHN5b2hRQno2ZHdwOGRnZFRTWXlLcFJ3Mnl2NWVBU2NIbUdjWHRvMjREd0VITlRORGxxblpseHdVdW1xaURHanQ5dHQ3czhRL01GajdzUWhzMklsdVdraG1WTWtzSjlRVVVYKzlTMFVQSWR1OTBLYnkxS0NYbGxzZ0pvUmQzcmdJZHJaazBhRHlPNGZqSW5PaW9rQURTcjFIaFRpczdpZ0h1NWxMOW1adFFZbVc2UVFiQ2lCdjJxdzNmL2VLN0c0YUtWSWFMajIyZWYyVFAvV1l4R2U1UEJWbHlwUG1BaEsxMlVpV0VwUDY4Y1RLU3dBWUZ6ZkJ1OVVDcmR2bVR5dFVmYWhnN3p4WEx0MnJuUk1QUEUwUGR0cXdtU3dxcTBNRmhreGZTd0cyWGE0dGJlMXA2K09LVUVCQzQ5MHRaM1dJRUZkeTMxZW9HYllvSHlZTGRnTVgraWhJMWhZcjczTEU2WGw0bFkwSlJGSUxNd3pOaXRtRmQ3SHZINS9RNHYwL0h3VjJKbEYzNjFNRXdtZkg1QllMSFhGVGF1VS9kZTZuTjFBaUI4UXNvbjVQNURRTWc1bUFnWnR3Y2NBN2dWNmVHcHNVR0loL243elJiRzkrTDFhaDFwY1hKRjNPV3BvVjZCdEZDZW1HKzN1bTVWNjN4eHdCNjkwUXllbVJJdEF3U0g2NXpuMXJqc29EdU9rR1VuYkZocEprSWxobVFKTDNiMk9tN1U2RjZvSU5CWjc5amRHcWk0VWlMMnhLczI4M0FwTy9Ma0dJcDNtaTRWTm03azROelJXbm9IL2V6cVBBTGZzamgyVjdPeHNONXd2MUUvZjRxeW9Gd0wrcVhIeUpMQ3ZiNlRHQ2JOaUE1OFdObDlzYUpyeTlLRWg4MkdlL1Y2MkdscmRoeVBndytkMXBkL21ZbThDUnpuUDJvZHZJNUg3MTRXTHhmemRueFUybTBnYzQ4OEtHMHgvbWw5aG9CTFRPUk5iZ3JvQnNWUUxFRzFWU3FZd3VlR0NyZ3EvOEhqQlBPSVlIYjBmcENoZ1Y1b0QyVWJVNkdmWmtXRmhZcFloK2ZFblRhYjNWM1UwZ3NXZnpVdEZNSms0SGdycDRmQ3ovMG1vOFh1L09oV0syT25WQ0dpZFhNSE9TV0Fod3U1Z0JmNnFNTXl3YkgxVm9jV3lnVVVnVFEzSW9kTmlCVkU1TWFGa3krL3ZTaHBVaUJDc1VjS0dsNDlkS3V0cDI4aW1JVGNFSitiTWxBM3Vpa0x6YmhveGowNFdQaDJ3S0NZMFR3dDRLaHdsQUI3TjNibmt5NjFUd2FHbldFRzJ5VzVpTDloWGpRY29LQks5ODZaeCtaK0Z5cmtyRXdQSDFwaFpYb1lKdVJZU1BlK3M5V1hLcnRCRXVTRHhJTUZKMVNNOHhJVndNZGZGR3VPWG12c3RqaUE0NzNENVJ0dWluUlNOUnJMamhNbFpwc1RhcG1jYWNvWDk2a0JIbGljb3JxN1AyZERkaXlDNDdjZjZ4WWZ1SEVWMUJndjZFSWs4NFRjU0t1OXJhSjliNU11bjhBbGZuUUQ4RkZRZVVEbHljRUlmMk1GQmt3TmxhMThZcmpZYmp3UHhRR2ZHK1FOVlJicUxEUWo1cmZSaWpVZ3MybFJiTjZWSnFQSmNlUmFDK0tpTTVJVWFaT0cwMzlxcEd4R2pLeWt6cEQzVFRNb3poZHpOeStPOVZkeDMrdlRpdW9NYXExMTF6OUw5cDJ2RFFyZ0RpbmdyWnRvUmdPTnJNMmI0MysrSW5GUnNtckl6eWNnSnBZZDRYSEJFdjZuTzdQbXhDdmVPbDJwMXZhOWR1ajJGMjh1Z0RRdDVCR2pZWklJRW1iSDVaZTA3dTV6Tmx2dFQ4WnJHcjJESFZZQlE0bTU4Y2VnSXRXYXJqamNldEtsZjFyS0kxYXlIbEY0NytOVTByemNqTGRPVnBoSWQxeTQrTWdibVFTT0R4c0t4L0p5WjJ3NDhyQzUyeW9UY2c2dFQ0OFBsZnB2bWhBbXVmbGU5cUh6dGRmcWVqUW1SMit2ZlFRQU9Nb1RjdE9TbExrTG9yWXRTeHlvNWlrZ01nOEZmU1k3RGtid0NEN1VTTDdidml4eGVveDg4eitLYTVzTXhuNElwdUczMFZISmdLTDd6V1ROUUVNN3dhVVF6K0VTRXYrWmZtY0g2ZXlnV2VjQW9XTW9WeUdlU2VERDNWeHJqN1hEUUtaR3l4V2lNVko3YjUrenFzTVVxUWdBVE1mYjFFeTYyL1g5dmdhTjhmVXBZQ1NJZWt3cEZVNVdpbkJzbUVCYWVtd04yajRCRjVzM0JmaVVlTFl2S1dvd1FNQk9DWmNNVkNFamFNN21yRkdiRnlTRitOc1MvYS8reWNzK3pWTStHNk5EMGZBMGVhUElTN3dHbEpsZ1V5OFU0enordHdBREFFN2NiWDYyMjV4T0FBQUFBRWxGVGtTdVFtQ0MiDQogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICB3aWR0aD0iOTMiPjwvc3Bhbj48L3A+DQogICAgICAgICAgICAgICAgICAgICAgICAgIDwvdGQ+PCEtLSBzcGFjZXIgLS0+DQogICAgICAgICAgICAgICAgICAgICAgICAgIDx0ZCBzdHlsZT0ncGFkZGluZzoxOC43NXB0IDIyLjVwdCAxNS4wcHQgMGNtJz4NCiAgICAgICAgICAgICAgICAgICAgICAgICAgICA8cCBhbGlnbj0icmlnaHQiDQogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgY2xhc3M9Ik1zb05vcm1hbCINCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBzdHlsZT0ndGV4dC1hbGlnbjpyaWdodDtsaW5lLWhlaWdodDoxMDUlJz48c3BhbiBzdHlsZT0nZm9udC1zaXplOjEwLjBwdDtmb250LWZhbWlseTogIlNlZ29lIFVJIixzYW5zLXNlcmlmO2NvbG9yOiMyMjIyMjInPkdvdmVybmFuY2UgVG9vbGtpdCAzNjU8L3NwYW4+PC9wPg0KICAgICAgICAgICAgICAgICAgICAgICAgICA8L3RkPg0KICAgICAgICAgICAgICAgICAgICAgICAgPC90cj4NCiAgICAgICAgICAgICAgICAgICAgICAgIDx0cj4NCiAgICAgICAgICAgICAgICAgICAgICAgICAgPCEtLSBiYW5uZXIgdGV4dCAtLT4NCiAgICAgICAgICAgICAgICAgICAgICAgICAgPHRkIGNvbHNwYW49IjIiDQogICAgICAgICAgICAgICAgICAgICAgICAgICAgICBzdHlsZT0nYmFja2dyb3VuZDpyZ2IoMTA2LCA2LCAxOTkpO3BhZGRpbmc6MTEuMjVwdCAyMi41cHQgMTEuMjVwdCAyMi41cHQnPg0KICAgICAgICAgICAgICAgICAgICAgICAgICAgIDxwIHN0eWxlPSdsaW5lLWhlaWdodDoxMDUlJz48c3BhbiBzdHlsZT0nZm9udC1zaXplOjE5LjVwdDtsaW5lLWhlaWdodDogMTA1JTtmb250LWZhbWlseToiU2Vnb2UgVUkgTGlnaHQiLHNhbnMtc2VyaWY7Y29sb3I6d2hpdGUnPkFwcGxpY2F0aW9uIFNlY3JldHMgYW5kIENlcnRpZmljYXRlczwvc3Bhbj48L3A+DQogICAgICAgICAgICAgICAgICAgICAgICAgIDwvdGQ+DQogICAgICAgICAgICAgICAgICAgICAgICA8L3RyPg0KICAgICAgICAgICAgICAgICAgICAgICAgPHRyPg0KICAgICAgICAgICAgICAgICAgICAgICAgICA8IS0tIGNvbnRlbnQgLS0+DQogICAgICAgICAgICAgICAgICAgICAgICAgIDx0ZCBjb2xzcGFuPSIyIg0KICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgc3R5bGU9J3dpZHRoOjEwMC4wJTtwYWRkaW5nOjExLjI1cHQgMjIuNXB0IDExLjI1cHQgMjIuNXB0Jw0KICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgd2lkdGg9IjEwMCUiPg0KICAgICAgICAgICAgICAgICAgICAgICAgICAgIDxwIHN0eWxlPSdsaW5lLWhlaWdodDoxMy41cHQnPjxzcGFuIHN0eWxlPSdmb250LXNpemU6MTAuMHB0O2ZvbnQtZmFtaWx5OiAiU2Vnb2UgVUkiLHNhbnMtc2VyaWY7Y29sb3I6IzIyMjIyMic+SGkgW2VtYWlsXSw8L3NwYW4+PC9wPg0KICAgICAgICAgICAgICAgICAgICAgICAgICAgIDxwIHN0eWxlPSdsaW5lLWhlaWdodDoxMy41cHQnPjxzcGFuIHN0eWxlPSdmb250LXNpemU6MTAuMHB0O2ZvbnQtZmFtaWx5OiAiU2Vnb2UgVUkiLHNhbnMtc2VyaWY7Y29sb3I6IzIyMjIyMic+aGVyZSB5b3UgY2FuIHNlZSBhbiBvdmVydmlldyBvZiB0aGUgYXBwbGljYXRpb25zIGluIHlvdXIgRW50cmEgSUQgc3lzdGVtLiBBIHdhcm5pbmcgaWNvbiBuZXh0IHRvIHRoZSBzZWNyZXQgaW5kaWNhdGVzIHRoYXQgdGhlIGV4cGlyYXRpb24gZGF0ZSBpcyBuZWFyIG9yIGhhcyBwYXNzZWQuPGJyPjwvc3Bhbj48L3A+DQogICAgICAgICAgICAgICAgICAgICAgICAgICAgPHAgc3R5bGU9J2xpbmUtaGVpZ2h0OjEzLjVwdCc+PHNwYW4gc3R5bGU9J2ZvbnQtc2l6ZToxMC4wcHQ7Zm9udC1mYW1pbHk6ICJTZWdvZSBVSSIsc2Fucy1zZXJpZjtjb2xvcjojMjIyMjIyJz5bdGV4dF08YnI+PC9zcGFuPjwvcD4NCiAgICAgICAgICAgICAgICAgICAgICAgICAgICA8cCBzdHlsZT0nbGluZS1oZWlnaHQ6MTMuNXB0Jz48c3BhbiBzdHlsZT0nZm9udC1zaXplOjEwLjBwdDtmb250LWZhbWlseTogIlNlZ29lIFVJIixzYW5zLXNlcmlmO2NvbG9yOiMyMjIyMjInPlNpbmNlcmVseSw8YnI+DQogICAgICAgICAgICAgICAgICAgICAgICAgICAgeW91ciB0ZWFtIG9mIGF0d29yazwvc3Bhbj48L3A+DQogICAgICAgICAgICAgICAgICAgICAgICAgIDwvdGQ+DQogICAgICAgICAgICAgICAgICAgICAgICA8L3RyPg0KICAgICAgICAgICAgICAgICAgICAgICAgPHRyPg0KICAgICAgICAgICAgICAgICAgICAgICAgICA8IS0tIGZvb3RlciAtLT4NCiAgICAgICAgICAgICAgICAgICAgICAgICAgPHRkIGNvbHNwYW49IjIiDQogICAgICAgICAgICAgICAgICAgICAgICAgICAgICBzdHlsZT0nYmFja2dyb3VuZDojNTk1OTU5O3BhZGRpbmc6Ljc1cHQgLjc1cHQgLjc1cHQgLjc1cHQnPg0KICAgICAgICAgICAgICAgICAgICAgICAgICAgIDxwIGNsYXNzPSJNc29Ob3JtYWwiDQogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgc3R5bGU9J21hcmdpbi1sZWZ0OjI2Ljg1cHQ7bGluZS1oZWlnaHQ6MTMuNXB0O2ZvbnQtc2l6ZTo5LjBwdDtmb250LWZhbWlseToiU2Vnb2UgVUkiLHNhbnMtc2VyaWY7IGNvbG9yOndoaXRlJz4mbmJzcDs8L3A+DQogICAgICAgICAgICAgICAgICAgICAgICAgICAgPHAgY2xhc3M9Ik1zb05vcm1hbCINCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBzdHlsZT0nbWFyZ2luLWxlZnQ6MjYuODVwdDtsaW5lLWhlaWdodDoxMy41cHQ7Zm9udC1zaXplOjkuMHB0O2ZvbnQtZmFtaWx5OiJTZWdvZSBVSSIsc2Fucy1zZXJpZjsgY29sb3I6d2hpdGUnPjxhIGhyZWY9Imh0dHBzOi8vd3d3LmF0d29yay1pdC5jb20vZ2Rwci8iDQogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgc3R5bGU9ImNvbG9yOndoaXRlIj5Qcml2YWN5IHN0YXRlbWVudDwvYT48L3A+DQogICAgICAgICAgICAgICAgICAgICAgICAgICAgPHAgY2xhc3M9Ik1zb05vcm1hbCINCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBzdHlsZT0nbWFyZ2luLWxlZnQ6MjYuODVwdDtsaW5lLWhlaWdodDoxMy41cHQ7Zm9udC1zaXplOjkuMHB0O2ZvbnQtZmFtaWx5OiJTZWdvZSBVSSIsc2Fucy1zZXJpZjsgY29sb3I6d2hpdGUnPlRoaXMgaXMgYW4gYXV0b21hdGljIGdlbmVyYXRlZCBlbWFpbCBzZW50IGJ5IDxhIGhyZWY9Imh0dHBzOi8vd3d3LmF0d29yay1pdC5jb20vIg0KICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHN0eWxlPSJjb2xvcjp3aGl0ZSI+YXR3b3JrPC9hPi4gRG8gbm90IHJlcGx5LjwvcD4NCiAgICAgICAgICAgICAgICAgICAgICAgICAgICA8cCBjbGFzcz0iTXNvTm9ybWFsIg0KICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHN0eWxlPSdtYXJnaW4tbGVmdDoyNi44NXB0O2xpbmUtaGVpZ2h0OjEzLjVwdDtmb250LXNpemU6OS4wcHQ7Zm9udC1mYW1pbHk6IlNlZ29lIFVJIixzYW5zLXNlcmlmOyBjb2xvcjp3aGl0ZSc+SW4gY2FzZSBvZiBxdWVzdGlvbnMsIHBscy4gY29udGFjdCA8YSBocmVmPSJtYWlsdG86b2ZmaWNlQGF0d29yay5hdD9zdWJqZWN0PW5vdGlmaWNhdGlvbiINCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBzdHlsZT0iY29sb3I6d2hpdGUiPm9mZmljZUBhdHdvcmsuYXQ8L2E+LjwvcD4NCiAgICAgICAgICAgICAgICAgICAgICAgICAgICA8cCBjbGFzcz0iTXNvTm9ybWFsIg0KICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHN0eWxlPSdtYXJnaW4tbGVmdDoyNi44NXB0O2xpbmUtaGVpZ2h0OjEzLjVwdDtmb250LXNpemU6OS4wcHQ7Zm9udC1mYW1pbHk6IlNlZ29lIFVJIixzYW5zLXNlcmlmOyBjb2xvcjp3aGl0ZSc+Jm5ic3A7PC9wPg0KICAgICAgICAgICAgICAgICAgICAgICAgICA8L3RkPg0KICAgICAgICAgICAgICAgICAgICAgICAgPC90cj4NCiAgICAgICAgICAgICAgICAgICAgICA8L3RhYmxlPg0KICAgICAgICAgICAgICAgICAgICA8L2Rpdj4NCiAgICAgICAgICAgICAgICAgIDwvdGQ+DQogICAgICAgICAgICAgICAgPC90cj4NCiAgICAgICAgICAgICAgPC90YWJsZT4NCiAgICAgICAgICAgIDwvZGl2Pg0KICAgICAgICAgICAgPGRpdiBhbGlnbj0iY2VudGVyIj4NCiAgICAgICAgICAgICAgPHRhYmxlIGJvcmRlcj0iMCINCiAgICAgICAgICAgICAgICAgICAgIGNlbGxwYWRkaW5nPSIwIg0KICAgICAgICAgICAgICAgICAgICAgY2VsbHNwYWNpbmc9IjAiDQogICAgICAgICAgICAgICAgICAgICBjbGFzcz0iTXNvTm9ybWFsVGFibGUiDQogICAgICAgICAgICAgICAgICAgICBzdHlsZT0nd2lkdGg6QHt2YXJpYWJsZXMoJ2VtYWlsV2lkdGgnKX07Ym9yZGVyLWNvbGxhcHNlOmNvbGxhcHNlJw0KICAgICAgICAgICAgICAgICAgICAgd2lkdGg9IjgwMCI+DQogICAgICAgICAgICAgICAgPHRyPg0KICAgICAgICAgICAgICAgICAgPHRkIHN0eWxlPSd3aWR0aDpAe3ZhcmlhYmxlcygnZW1haWxXaWR0aCcpfTtiYWNrZ3JvdW5kOiNGMUYxRjE7cGFkZGluZzowcHQgMHB0IDIuMjVwdCAwcHQnDQogICAgICAgICAgICAgICAgICAgICAgd2lkdGg9IjgwMCI+DQogICAgICAgICAgICAgICAgICAgIDxwIGFsaWduPSJsZWZ0Ig0KICAgICAgICAgICAgICAgICAgICAgICBzdHlsZT0ndGV4dC1hbGlnbjpyaWdodCc+PHNwYW4gc3R5bGU9J2ZvbnQtc2l6ZTo5LjBwdDtmb250LWZhbWlseToiU2Vnb2UgVUkiLHNhbnMtc2VyaWY7Y29sb3I6IzY2NjY2Nic+Jm5ic3A7PC9zcGFuPjwvcD4NCiAgICAgICAgICAgICAgICAgIDwvdGQ+DQogICAgICAgICAgICAgICAgPC90cj4NCiAgICAgICAgICAgICAgPC90YWJsZT4NCiAgICAgICAgICAgIDwvZGl2Pg0KICAgICAgICAgIDwvdGQ+DQogICAgICAgIDwvdHI+DQogICAgICA8L3RhYmxlPg0KICAgIDwvZGl2Pg0KICAgIDxwIGNsYXNzPSJNc29Ob3JtYWwiPiZuYnNwOzwvcD4NCiAgPC9kaXY+DQo8L2JvZHk+DQo8L2h0bWw+DQo="
+                        }
+                    ]
+                }
+            }
+        },
+        "outputs": {},
+        "parameters": {
+            "$connections": {
+                "type": "Object",
+                "defaultValue": {}
+            }
+        }
+    },
+    "parameters": {
+        "$connections": {
+            "type": "Object",
+            "value": {
+                "azuretables": {
+                    "id": "/subscriptions/<subscription-id>/providers/Microsoft.Web/locations/westeurope/managedApis/azuretables",
+                    "connectionId": "/subscriptions/<subscription-id>/resourceGroups/RG-Apps/providers/Microsoft.Web/connections/azuretables",
+                    "connectionName": "azuretables"
+                },
+                "office365": {
+                    "id": "/subscriptions/<subscription-id>/providers/Microsoft.Web/locations/westeurope/managedApis/office365",
+                    "connectionId": "/subscriptions/<subscription-id>/resourceGroups/RG-Apps/providers/Microsoft.Web/connections/office365",
+                    "connectionName": "office365"
+                }
+            }
+        }
+    }
+}

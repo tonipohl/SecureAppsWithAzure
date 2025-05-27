@@ -1,1 +1,299 @@
-{}
+{
+    "definition": {
+        "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+        "contentVersion": "1.0.0.0",
+        "triggers": {
+            "When_a_HTTP_request_is_received": {
+                "type": "Request",
+                "kind": "Http"
+            }
+        },
+        "actions": {
+            "initConfig": {
+                "type": "InitializeVariable",
+                "inputs": {
+                    "variables": [
+                        {
+                            "name": "config",
+                            "type": "object",
+                            "value": {
+                                "tableApps": "Apps",
+                                "tableOwners": "Owners",
+                                "tableSecrets": "Secrets",
+                                "tableRecipients": "Recipients",
+                                "tableSPN": "EnterpriseApps",
+                                "threshold": 180,
+                                "showAll": false,
+                                "adminEmail": "toni@tpe5.onmicrosoft.com",
+                                "debug": true
+                            }
+                        }
+                    ]
+                },
+                "runAfter": {}
+            },
+            "HTTP": {
+                "type": "Http",
+                "description": "https://learn.microsoft.com/en-us/graph/api/application-get?view=graph-rest-1.0&tabs=http\nTest: &$filter=id@{concat(' eq ')}'664a85cf-28d2-4d71-92ef-96a063c1b4f4'",
+                "inputs": {
+                    "uri": "https://graph.microsoft.com/v1.0/applications?$select=id,deletedDateTime,appId,createdDateTime,displayName,signInAudience,keyCredentials,passwordCredentials",
+                    "method": "GET",
+                    "headers": {
+                        "Content-Type": "application/json"
+                    },
+                    "authentication": {
+                        "type": "ActiveDirectoryOAuth",
+                        "authority": "https://login.microsoft.com",
+                        "tenant": "f89d8982-a030-4c14-9b60-8dbd82b66428",
+                        "audience": "https://graph.microsoft.com/",
+                        "clientId": "298f29ff-5e3c-446f-b01c-236d68cbc5dd",
+                        "secret": "@{body('getsecret')?['value']}"
+                    }
+                },
+                "runAfter": {
+                    "getsecret": [
+                        "Succeeded"
+                    ]
+                },
+                "runtimeConfiguration": {
+                    "contentTransfer": {
+                        "transferMode": "Chunked"
+                    }
+                }
+            },
+            "foreach": {
+                "type": "Foreach",
+                "foreach": "@body('HTTP')?['value']",
+                "actions": {
+                    "InsertOrMergeApp": {
+                        "type": "ApiConnection",
+                        "inputs": {
+                            "host": {
+                                "connection": {
+                                    "name": "@parameters('$connections')['azuretables']['connectionId']"
+                                }
+                            },
+                            "method": "patch",
+                            "body": {
+                                "displayName": "@{item()?['displayName']}",
+                                "createdDateTime": "@{item()?['createdDateTime']}",
+                                "secrets": "@add(length(item()?['passwordCredentials']),length(item()?['keyCredentials']))"
+                            },
+                            "path": "/v2/storageAccounts/@{encodeURIComponent(encodeURIComponent('AccountNameFromSettings'))}/tables/@{encodeURIComponent(variables('config')?['tableApps'])}/entities(PartitionKey='@{encodeURIComponent(item()?['signInAudience'])}',RowKey='@{encodeURIComponent(item()?['appid'])}')"
+                        }
+                    },
+                    "foreachsecret": {
+                        "type": "Foreach",
+                        "foreach": "@items('foreach')?['passwordCredentials']",
+                        "actions": {
+                            "InsertOrMergeAppSecret": {
+                                "type": "ApiConnection",
+                                "inputs": {
+                                    "host": {
+                                        "connection": {
+                                            "name": "@parameters('$connections')['azuretables']['connectionId']"
+                                        }
+                                    },
+                                    "method": "patch",
+                                    "body": {
+                                        "displayName": "@{items('foreachsecret')?['displayName']}",
+                                        "endDateTime": "@{items('foreachsecret')?['endDateTime']}",
+                                        "endDateTime@odata.type": "Edm.DateTime",
+                                        "type": "secret",
+                                        "startDateTime": "@{items('foreachsecret')?['startDateTime']}",
+                                        "startDateTime@odata.type": "Edm.DateTime",
+                                        "expiresInDays": "@div(sub(ticks(utcNow()),ticks(formatDateTime(items('foreachsecret')?['endDateTime'],'yyyy-MM-dd'))),864000000000)",
+                                        "expiresInDays@odata.type": "Edm.Int32",
+                                        "appName": "@{items('foreach')?['displayName']}"
+                                    },
+                                    "path": "/v2/storageAccounts/@{encodeURIComponent(encodeURIComponent('AccountNameFromSettings'))}/tables/@{encodeURIComponent(variables('config')?['tableSecrets'])}/entities(PartitionKey='@{encodeURIComponent(items('foreach')?['appId'])}',RowKey='@{encodeURIComponent(items('foreachsecret')?['keyId'])}')"
+                                }
+                            }
+                        },
+                        "runAfter": {
+                            "InsertOrMergeApp": [
+                                "Succeeded",
+                                "Failed"
+                            ]
+                        }
+                    },
+                    "HTTPowners": {
+                        "type": "Http",
+                        "description": "https://learn.microsoft.com/en-us/graph/api/application-list-owners?view=graph-rest-1.0",
+                        "inputs": {
+                            "uri": "https://graph.microsoft.com/v1.0/applications/@{items('foreach')?['id']}/owners",
+                            "method": "GET",
+                            "headers": {
+                                "Content-Type": "application/json"
+                            },
+                            "authentication": {
+                                "type": "ActiveDirectoryOAuth",
+                                "authority": "https://login.microsoft.com",
+                                "tenant": "f89d8982-a030-4c14-9b60-8dbd82b66428",
+                                "audience": "https://graph.microsoft.com/",
+                                "clientId": "298f29ff-5e3c-446f-b01c-236d68cbc5dd",
+                                "secret": "@{body('getsecret')?['value']}"
+                            }
+                        },
+                        "runAfter": {
+                            "foreachcert": [
+                                "Succeeded"
+                            ]
+                        },
+                        "runtimeConfiguration": {
+                            "contentTransfer": {
+                                "transferMode": "Chunked"
+                            }
+                        }
+                    },
+                    "foreachowner": {
+                        "type": "Foreach",
+                        "foreach": "@body('HTTPowners')?['value']",
+                        "actions": {
+                            "InsertOrMergeOwner": {
+                                "type": "ApiConnection",
+                                "inputs": {
+                                    "host": {
+                                        "connection": {
+                                            "name": "@parameters('$connections')['azuretables']['connectionId']"
+                                        }
+                                    },
+                                    "method": "patch",
+                                    "body": {
+                                        "displayName": "@{items('foreachowner')?['displayName']}",
+                                        "userPrincipalName": "@{items('foreachowner')?['userPrincipalName']}",
+                                        "sentdate": null,
+                                        "sentdate@odata.type": "Edm.DateTime",
+                                        "appName": "@{items('foreach')?['displayName']}"
+                                    },
+                                    "path": "/v2/storageAccounts/@{encodeURIComponent(encodeURIComponent('AccountNameFromSettings'))}/tables/@{encodeURIComponent(variables('config')?['tableOwners'])}/entities(PartitionKey='@{encodeURIComponent(items('foreach')?['appId'])}',RowKey='@{encodeURIComponent(items('foreachowner')?['id'])}')"
+                                }
+                            },
+                            "InsertOrMergeRecipient": {
+                                "type": "ApiConnection",
+                                "inputs": {
+                                    "host": {
+                                        "connection": {
+                                            "name": "@parameters('$connections')['azuretables']['connectionId']"
+                                        }
+                                    },
+                                    "method": "patch",
+                                    "body": {},
+                                    "path": "/v2/storageAccounts/@{encodeURIComponent(encodeURIComponent('AccountNameFromSettings'))}/tables/@{encodeURIComponent(variables('config')?['tableRecipients'])}/entities(PartitionKey='@{encodeURIComponent(replace(coalesce(items('foreachowner')?['userPrincipalName'],'noadmin@tpe5.onmicrosoft.com'),'#','|'))}',RowKey='@{encodeURIComponent(items('foreachowner')?['id'])}')"
+                                },
+                                "runAfter": {
+                                    "InsertOrMergeOwner": [
+                                        "Succeeded",
+                                        "Failed"
+                                    ]
+                                }
+                            }
+                        },
+                        "runAfter": {
+                            "HTTPowners": [
+                                "Succeeded",
+                                "Failed"
+                            ]
+                        }
+                    },
+                    "foreachcert": {
+                        "type": "Foreach",
+                        "foreach": "@items('foreach')?['keyCredentials']",
+                        "actions": {
+                            "InsertOrMergeAppCert": {
+                                "type": "ApiConnection",
+                                "inputs": {
+                                    "host": {
+                                        "connection": {
+                                            "name": "@parameters('$connections')['azuretables']['connectionId']"
+                                        }
+                                    },
+                                    "method": "patch",
+                                    "body": {
+                                        "displayName": "@{items('foreachcert')?['displayName']}",
+                                        "endDateTime": "@{items('foreachcert')?['endDateTime']}",
+                                        "endDateTime@odata.type": "Edm.DateTime",
+                                        "type": "certificate",
+                                        "startDateTime": "@{items('foreachcert')?['startDateTime']}",
+                                        "startDateTime@odata.type": "Edm.DateTime",
+                                        "expiresInDays": "@{div(sub(ticks(utcNow()),ticks(formatDateTime(items('foreachcert')?['endDateTime'],'yyyy-MM-dd'))),864000000000)}",
+                                        "expiresInDays@odata.type": "Edm.Int32",
+                                        "appName": "@{items('foreach')?['displayName']}"
+                                    },
+                                    "path": "/v2/storageAccounts/@{encodeURIComponent(encodeURIComponent('AccountNameFromSettings'))}/tables/@{encodeURIComponent(variables('config')?['tableSecrets'])}/entities(PartitionKey='@{encodeURIComponent(items('foreach')?['appId'])}',RowKey='@{encodeURIComponent(items('foreachcert')?['keyId'])}')"
+                                }
+                            }
+                        },
+                        "runAfter": {
+                            "foreachsecret": [
+                                "Succeeded",
+                                "Failed"
+                            ]
+                        }
+                    }
+                },
+                "runAfter": {
+                    "HTTP": [
+                        "Succeeded"
+                    ]
+                }
+            },
+            "getsecret": {
+                "type": "ApiConnection",
+                "inputs": {
+                    "host": {
+                        "connection": {
+                            "name": "@parameters('$connections')['keyvault']['connectionId']"
+                        }
+                    },
+                    "method": "get",
+                    "path": "/secrets/@{encodeURIComponent('secret')}/value"
+                },
+                "runAfter": {
+                    "initConfig": [
+                        "Succeeded",
+                        "Failed"
+                    ]
+                },
+                "runtimeConfiguration": {
+                    "secureData": {
+                        "properties": [
+                            "inputs",
+                            "outputs"
+                        ]
+                    }
+                }
+            }
+        },
+        "outputs": {},
+        "parameters": {
+            "$connections": {
+                "type": "Object",
+                "defaultValue": {}
+            }
+        }
+    },
+    "parameters": {
+        "$connections": {
+            "type": "Object",
+            "value": {
+                "azuretables": {
+                    "id": "/subscriptions/3<subscription-id>/providers/Microsoft.Web/locations/westeurope/managedApis/azuretables",
+                    "connectionId": "/subscriptions/3<subscription-id>/resourceGroups/RG-Apps/providers/Microsoft.Web/connections/azuretables",
+                    "connectionName": "azuretables"
+                },
+                "keyvault": {
+                    "id": "/subscriptions/3<subscription-id>/providers/Microsoft.Web/locations/westeurope/managedApis/keyvault",
+                    "connectionId": "/subscriptions/3<subscription-id>/resourceGroups/RG-Apps/providers/Microsoft.Web/connections/keyvault",
+                    "connectionName": "keyvault",
+                    "connectionProperties": {
+                        "authentication": {
+                            "type": "ManagedServiceIdentity",
+                            "identity": "/subscriptions/3<subscription-id>/resourceGroups/RG-Apps/providers/Microsoft.ManagedIdentity/userAssignedIdentities/UAMIo2xxhsgz7d"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
